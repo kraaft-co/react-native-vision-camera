@@ -11,9 +11,11 @@ import android.view.Surface
 import com.mrousavy.camera.CameraQueues
 import com.mrousavy.camera.extensions.closestToOrMax
 import com.mrousavy.camera.extensions.getPhotoSizes
-import com.mrousavy.camera.extensions.getPreviewSize
+import com.mrousavy.camera.extensions.getPreviewTargetSize
 import com.mrousavy.camera.extensions.getVideoSizes
 import com.mrousavy.camera.core.VideoPipeline
+import com.mrousavy.camera.extensions.bigger
+import com.mrousavy.camera.extensions.smaller
 import java.io.Closeable
 
 class CameraOutputs(val cameraId: String,
@@ -29,13 +31,14 @@ class CameraOutputs(val cameraId: String,
     const val PHOTO_OUTPUT_BUFFER_SIZE = 3
   }
 
-  data class PreviewOutput(val surface: Surface)
-  data class PhotoOutput(val targetSize: Size? = null,
-                         val format: Int = ImageFormat.JPEG)
-  data class VideoOutput(val targetSize: Size? = null,
-                         val enableRecording: Boolean = false,
-                         val enableFrameProcessor: Boolean? = false,
-                         val format: Int = ImageFormat.PRIVATE)
+  data class PreviewOutput(val surface: Surface, val targetSize: Size? = null)
+  data class PhotoOutput(val targetSize: Size? = null, val format: Int = ImageFormat.JPEG)
+  data class VideoOutput(
+    val targetSize: Size? = null,
+    val enableRecording: Boolean = false,
+    val enableFrameProcessor: Boolean? = false,
+    val format: Int = ImageFormat.PRIVATE
+  )
 
   interface Callback {
     fun onPhotoCaptured(image: Image)
@@ -59,14 +62,15 @@ class CameraOutputs(val cameraId: String,
 
   override fun equals(other: Any?): Boolean {
     if (other !is CameraOutputs) return false
-    return this.cameraId == other.cameraId
-      && this.preview?.surface == other.preview?.surface
-      && this.photo?.targetSize == other.photo?.targetSize
-      && this.photo?.format == other.photo?.format
-      && this.video?.enableRecording == other.video?.enableRecording
-      && this.video?.targetSize == other.video?.targetSize
-      && this.video?.format == other.video?.format
-      && this.enableHdr == other.enableHdr
+    return this.cameraId == other.cameraId && 
+      this.preview?.surface == other.preview?.surface && 
+      this.preview?.targetSize == other.preview?.targetSize && 
+      this.photo?.targetSize == other.photo?.targetSize && 
+      this.photo?.format == other.photo?.format && 
+      this.video?.enableRecording == other.video?.enableRecording && 
+      this.video?.targetSize == other.video?.targetSize &&
+      this.video?.format == other.video?.format &&
+      this.enableHdr == other.enableHdr
   }
 
   override fun hashCode(): Int {
@@ -99,7 +103,11 @@ class CameraOutputs(val cameraId: String,
     // Preview output: Low resolution repeating images (SurfaceView)
     if (preview != null) {
       Log.i(TAG, "Adding native preview view output.")
-      previewOutput = SurfaceOutput(preview.surface, characteristics.getPreviewSize(), SurfaceOutput.OutputType.PREVIEW)
+      val previewSizeAspectRatio = if (preview.targetSize != null) preview.targetSize.bigger.toDouble() / preview.targetSize.smaller else null
+      previewOutput = SurfaceOutput(
+        preview.surface,
+        characteristics.getPreviewTargetSize(previewSizeAspectRatio),
+        SurfaceOutput.OutputType.PREVIEW)
     }
 
     // Photo output: High quality still images (takePhoto())
