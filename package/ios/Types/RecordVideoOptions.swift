@@ -34,14 +34,14 @@ struct RecordVideoOptions {
       flash = parsed
     }
     // Codec
-    if let codecOption = dictionary["codec"] as? String {
+    if let codecOption = dictionary["videoCodec"] as? String {
       guard let parsed = try? AVVideoCodecType(withString: codecOption) else {
-        throw CameraError.parameter(.invalid(unionName: "codec", receivedValue: codecOption))
+        throw CameraError.parameter(.invalid(unionName: "videoCodec", receivedValue: codecOption))
       }
       codec = parsed
     }
     // BitRate
-    if let parsed = dictionary["bitRate"] as? Double {
+    if let parsed = dictionary["videoBitRate"] as? Double {
       bitRate = parsed
     }
   }
