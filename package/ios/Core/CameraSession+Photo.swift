@@ -43,15 +43,13 @@ extension CameraSession {
       // Create photo settings
       let photoSettings = AVCapturePhotoSettings()
 
-      // default, overridable settings if high quality capture was enabled
-      if photo.enableHighQualityPhotos {
-        // TODO: On iOS 16+ this will be removed in favor of maxPhotoDimensions.
-        photoSettings.isHighResolutionPhotoEnabled = true
-        if #available(iOS 13.0, *) {
-          photoSettings.photoQualityPrioritization = .quality
-        }
+      // set photo resolution
+      if #available(iOS 16.0, *) {
+        photoSettings.maxPhotoDimensions = photoOutput.maxPhotoDimensions
+      } else {
+        photoSettings.isHighResolutionPhotoEnabled = photoOutput.isHighResolutionCaptureEnabled
       }
-
+      
       // flash
       if videoDeviceInput.device.isFlashAvailable, let flash = options["flash"] as? String {
         guard let flashMode = AVCaptureDevice.FlashMode(withString: flash) else {

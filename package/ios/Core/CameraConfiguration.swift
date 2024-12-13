@@ -136,7 +136,6 @@ class CameraConfiguration {
    A Photo Output configuration
    */
   struct Photo: Equatable {
-    var enableHighQualityPhotos = false
     var enableDepthData = false
     var enablePortraitEffectsMatte = false
   }
